@@ -3,26 +3,32 @@ package edu.uwm.cs351;
 import java.util.AbstractCollection;
 // ### \subsection{Extra Imports}
 import java.util.ConcurrentModificationException; //##
+import java.util.Iterator;
 import java.util.NoSuchElementException; // ##
 
 /**
- * A variant of the TransactionSeq ADT that follows the Collection model.
+ * A variant of the ElementTypeSeq ADT that follows the Collection model.
  * In particular, it has no sense of a current element.
  * All access to elements by the client must be through the iterator.
- * The {@link #add(Transaction)} method should add at the end of the collection.
+ * The {@link #add(ElementType)} method should add at the end of the collection.
  * The {@link #iterator()} will satisfy the extended {@link AddableIterator} interface.
  */
-public class ArrayCollection extends AbstractCollection<Transaction> implements Cloneable {
+public class ArrayCollection<ElementType> extends AbstractCollection<ElementType> implements Cloneable {
 	private boolean report(String error) {
 		System.out.println("Invariant error: " + error);
 		return false;
 	}
 	
-	// ### \subsection{Class TransactionCollection}
+	@SuppressWarnings("unchecked") // evil snicker
+	private ElementType[] makeArray(int cap) {
+		return (ElementType[]) new Object[cap]; // lying
+	}
+	
+	// ### \subsection{Class ElementTypeCollection}
 	// #(
 	private static final int INITIAL_CAPACITY = 1;
 
-	private Transaction[] data;
+	public ElementType[] data;
 	private int manyItems;
 
 	private int version;
@@ -44,7 +50,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 
 	/**
 	 * Initialize an empty particle collection with an initial capacity of INITIAL_CAPACITY. 
-	 * The {@link #add(Transaction)} method works
+	 * The {@link #add(ElementType)} method works
 	 * efficiently (without needing more memory) until this capacity is reached.
 	 * @param - none
 	 * @postcondition
@@ -56,7 +62,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 
 	/**
 	 * Initialize an empty collection with a specified capacity.
-	 * The {@link #add(Transaction)} method works
+	 * The {@link #add(ElementType)} method works
 	 * efficiently (without needing more memory) until this capacity is reached.
 	 * @param capacity
 	 *   The initial capacity of this collection, must not be negative
@@ -67,7 +73,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 	 **/   
 	public ArrayCollection(int capacity) {
 		if (capacity < 0) throw new IllegalArgumentException("negative capacity not allowed");
-		data = new Transaction[capacity];
+		data = makeArray(capacity);
 		assert wellFormed() : "constructor did not satisfy invariant!";
 	}
 
@@ -82,7 +88,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 	 *   A new copy of the element has been added to the end of this collection.
 	 **/
 	@Override // implementation
-	public boolean add(Transaction element)
+	public boolean add(ElementType element)
 	{
 		assert wellFormed() : "invariant failed at start of insert";
 		ensureCapacity(manyItems+1);
@@ -117,7 +123,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 		if (data.length >= minimumCapacity) return;
 		int newCap = data.length*2;
 		if (newCap < minimumCapacity) newCap = minimumCapacity;
-		Transaction[] newData = new Transaction[newCap];
+		ElementType[] newData = makeArray(newCap);
 		for (int i=0; i < manyItems; ++i) {
 			newData[i] = data[i];
 		}
@@ -134,14 +140,15 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 	 * @exception OutOfMemoryError
 	 *   Indicates insufficient memory for creating the clone.
 	 **/ 
+	@SuppressWarnings("unchecked") // actually just fine
 	@Override // extend implementation
-	public ArrayCollection clone( ) { 
+	public ArrayCollection<ElementType> clone( ) { 
 		assert wellFormed() : "invariant failed at start of clone";
-		ArrayCollection answer;
+		ArrayCollection<ElementType> answer;
 
 		try
 		{
-			answer = (ArrayCollection) super.clone( );
+			answer = (ArrayCollection<ElementType>) super.clone( );
 		}
 		catch (CloneNotSupportedException e)
 		{  // This exception should not occur. But if it does, it would probably
@@ -162,7 +169,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 	}
 
 	@Override // required
-	public AddableIterator<Transaction> iterator() {
+	public Iterator<ElementType> iterator() {
 		assert wellFormed() : "invariant broken in iterator()";
 		return new MyIterator();
 	}
@@ -194,7 +201,7 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 	// make sure you have no "currentIndex" field.
 
 	private class MyIterator // TODO: what should this implement?	
-	implements AddableIterator<Transaction> // ### \subsection{Iterator class implements}
+	implements Iterator<ElementType> // ### \subsection{Iterator class implements}
 	{
 		// #(# \subsection{Iterator class data structure}
 		private int currentIndex;
@@ -232,48 +239,16 @@ public class ArrayCollection extends AbstractCollection<Transaction> implements 
 		}
 
 		@Override // required
-		public Transaction next() {
+		public ElementType next() {
 			assert wellFormed() : "invariant broken in next";
 			if (!hasNext()) throw new NoSuchElementException("no more!");
 			if (isCurrent) ++currentIndex;
 			else isCurrent = true;
-			Transaction result = data[currentIndex];
+			ElementType result = data[currentIndex];
 			assert wellFormed() : "invariant broken by next";
 			return result;
 		}
 
-		@Override // required
-		public void addBefore(Transaction element) {
-			assert wellFormed() : "invariant broken in addBefore";
-			checkVersion();
-			ensureCapacity(manyItems+1);
-
-			for (int i=manyItems; i > currentIndex; --i) {
-				data[i] = data[i-1];
-			}
-			data[currentIndex] = element;
-			++currentIndex;
-			++manyItems;
-			colVersion = ++version;
-			assert wellFormed() : "invariant broken by addBefore";
-		}
-		
-		@Override // required
-		public void addAfter(Transaction element) {
-			assert wellFormed() : "invariant broken in addAfter";
-			checkVersion();
-			ensureCapacity(manyItems+1);
-
-			int nextIndex = isCurrent ? currentIndex+1 : currentIndex;
-			
-			for (int i=manyItems; i > nextIndex; --i) {
-				data[i] = data[i-1];
-			}
-			data[nextIndex] = element;
-			++manyItems;
-			colVersion = ++version;
-			assert wellFormed() : "invariant broken by addAfter";
-		}
 		
 		@Override // implementation
 		public void remove() {

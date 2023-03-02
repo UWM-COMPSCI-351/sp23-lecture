@@ -1,3 +1,4 @@
+import edu.uwm.cs351.ArrayCollection;
 
 public class TestArrayCollection extends TestCollection<String> {
 	@Override
@@ -6,4 +7,10 @@ public class TestArrayCollection extends TestCollection<String> {
 		c = new ArrayCollection<String>();
 	}
 
+	public void test90() {
+		ArrayCollection<Integer> ac = new ArrayCollection<>();
+		ac.add(42);
+		Integer result = ac.data[0];
+		System.out.println("a[0] = " + result);
+	}
 }
