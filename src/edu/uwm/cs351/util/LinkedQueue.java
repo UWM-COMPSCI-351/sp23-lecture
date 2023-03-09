@@ -1,4 +1,4 @@
-package edu.uwm.cs351;
+package edu.uwm.cs351.util;
 
 public class LinkedQueue<E> implements Queue<E>, Cloneable {
 

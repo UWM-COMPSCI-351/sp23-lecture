@@ -2,8 +2,8 @@
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
-import edu.uwm.cs351.LinkedQueue;
-import edu.uwm.cs351.Queue;
+import edu.uwm.cs351.util.LinkedQueue;
+import edu.uwm.cs351.util.Queue;
 import junit.framework.TestCase;
 
 

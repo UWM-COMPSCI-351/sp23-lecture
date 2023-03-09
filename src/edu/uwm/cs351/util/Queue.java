@@ -1,4 +1,4 @@
-package edu.uwm.cs351;
+package edu.uwm.cs351.util;
 
 /**
  * Interface for CS 351 queue classes.
